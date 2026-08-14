@@ -2,7 +2,7 @@
   "id": "prism-dashboard",
   "name": "Prism Dashboard",
   "version": "1.0.0",
-  "minAppVersion": "1.0.0",
+  "minAppVersion": "1.5.0",
   "description": "A context-adaptive dashboard that reconfigures itself by time of day, active project, and live priority.",
   "author": "Kerekes Stefan",
   "authorUrl": "",

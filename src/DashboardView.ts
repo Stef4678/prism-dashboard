@@ -176,8 +176,8 @@ export class DashboardView extends ItemView {
     });
     this.lastTopId = topId;
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => root.classList.add("is-visible"));
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => root.classList.add("is-visible"));
     });
   }
 }

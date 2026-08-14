@@ -37,7 +37,7 @@ export class PrismSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Prism" });
+    new Setting(containerEl).setName("Prism").setHeading();
     containerEl.createEl("p", {
       cls: "setting-item-description",
       text: "A context-adaptive dashboard that refracts to your day.",
@@ -67,7 +67,7 @@ export class PrismSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", { text: "Mode hours" });
+    new Setting(containerEl).setName("Mode hours").setHeading();
     for (const mode of MODES) {
       const [start, end] = this.plugin.settings.modeHours[mode];
       const row = new Setting(containerEl)
@@ -99,7 +99,7 @@ export class PrismSettingTab extends PluginSettingTab {
       );
     }
 
-    containerEl.createEl("h3", { text: "Widgets" });
+    new Setting(containerEl).setName("Widgets").setHeading();
     for (const [id, enabled] of Object.entries(this.plugin.settings.enabledWidgets)) {
       new Setting(containerEl)
         .setName(WIDGET_LABELS[id] ?? id)

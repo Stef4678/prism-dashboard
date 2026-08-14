@@ -70,7 +70,7 @@ due: 2026-08-17
 1. Download the latest release from the [releases page](https://github.com/Stef4678/prism-dashboard/releases).
 2. Unzip `main.js`, `manifest.json`, and `styles.css` into `YourVault/.obsidian/plugins/prism-dashboard/`.
 3. Reload Obsidian, then enable **Prism Dashboard** under *Settings → Community plugins*.
-4. Open it via the ribbon icon (dashboard) or the command palette: **Open Prism dashboard**.
+4. Open it via the ribbon icon (dashboard) or the command palette: **Open dashboard**.
 
 ## Development
 

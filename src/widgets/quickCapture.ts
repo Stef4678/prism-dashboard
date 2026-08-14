@@ -17,10 +17,12 @@ export const quickCapture: Widget = {
         spellcheck: "true",
       },
     });
-    input.addEventListener("keydown", async (ev) => {
+    input.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter" && input.value.trim()) {
         const text = input.value.trim();
-        if (await ctx.capture(text)) input.value = "";
+        void ctx.capture(text).then((ok) => {
+          if (ok) input.value = "";
+        });
       }
     });
   },

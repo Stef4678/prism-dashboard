@@ -31,7 +31,7 @@ export class DataLayer {
     const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
     if (!fm) return null;
     for (const key of ["deadline", "due", "due_date", "date"]) {
-      const raw = fm[key];
+      const raw: unknown = fm[key];
       if (raw == null) continue;
       const t =
         typeof raw === "string" || typeof raw === "number"

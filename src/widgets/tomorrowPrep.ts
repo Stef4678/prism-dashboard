@@ -1,8 +1,6 @@
 import { Widget, UpcomingDeadline } from "../types";
 import { emptyState, formatWhen, listItem } from "./Widget";
 
-const HOUR_MS = 3600000;
-
 function landingTomorrow(list: UpcomingDeadline[], now: number): UpcomingDeadline[] {
   const startTomorrow = new Date(now);
   startTomorrow.setHours(24, 0, 0, 0);

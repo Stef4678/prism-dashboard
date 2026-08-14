@@ -21,7 +21,7 @@ export default class PrismPlugin extends Plugin {
     const saved = (await this.loadData()) as PersistedData | null;
     this.settings = Object.assign({}, DEFAULT_SETTINGS, saved?.settings ?? {});
     this.dataLayer = new DataLayer(this.app);
-    this.activity = new ActivityTracker(() => this.persist());
+    this.activity = new ActivityTracker(() => void this.persist());
     this.activity.load(saved?.activity);
     this.registry = buildRegistry();
 
@@ -30,8 +30,8 @@ export default class PrismPlugin extends Plugin {
       void this.activateView();
     });
     this.addCommand({
-      id: "open-prism-dashboard",
-      name: "Open Prism dashboard",
+      id: "open-dashboard",
+      name: "Open dashboard",
       callback: () => {
         void this.activateView();
       },
@@ -47,7 +47,6 @@ export default class PrismPlugin extends Plugin {
 
   onunload(): void {
     this.activity.flush();
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
   }
 
   async activateView(): Promise<void> {
@@ -57,7 +56,7 @@ export default class PrismPlugin extends Plugin {
       leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf(true);
       await leaf.setViewState({ type: VIEW_TYPE, active: true });
     }
-    workspace.revealLeaf(leaf);
+    void workspace.revealLeaf(leaf);
   }
 
   async capture(text: string): Promise<void> {
