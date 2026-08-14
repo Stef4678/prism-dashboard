@@ -263,38 +263,6 @@
     0 14px 44px color-mix(in srgb, var(--prism-accent) 22%, transparent);
 }
 
-/* shimmer edge on hover (mask-based border only when supported) */
-.prism-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-@supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
-  .prism-card::before {
-    background: linear-gradient(130deg, transparent 22%, var(--prism-accent) 46%, var(--prism-accent-3) 54%, transparent 78%);
-    background-size: 300% 300%;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-
-  .prism-card:hover::before {
-    opacity: 1;
-    animation: prismShimmer 2.6s linear infinite;
-  }
-}
-
-@keyframes prismShimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 300% 50%; }
-}
-
 /* pulse when the top card changes */
 .prism-card.is-pulse {
   animation: prismPulse 1.5s ease 2;
