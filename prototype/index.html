@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en" class="theme-dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prism — prototype</title>
+<style>
+  :root {
+    --prism-accent: #7c6cff;
+    --prism-accent-2: #b18cff;
+    --prism-accent-3: #5eead4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--prism-title);
+    transition: background .4s ease;
+  }
+  html.theme-dark body {
+    --prism-title: #e8ecf6;
+    --prism-dim: rgba(232, 236, 246, 0.55);
+    --prism-danger: #ff7b92;
+    --prism-bg: #0b0f1a;
+    --prism-bg-soft: #0e1320;
+  }
+  html.theme-light body {
+    --prism-title: #1c1a2e;
+    --prism-dim: rgba(60, 58, 88, 0.6);
+    --prism-danger: #e5484d;
+    --prism-bg: #f4f2fb;
+    --prism-bg-soft: #faf9fe;
+  }
+  body {
+    background:
+      radial-gradient(900px 480px at 12% -8%, color-mix(in srgb, var(--prism-accent) 14%, transparent), transparent 62%),
+      radial-gradient(760px 420px at 95% 112%, color-mix(in srgb, var(--prism-accent-3) 10%, transparent), transparent 60%),
+      var(--prism-bg);
+    background-attachment: fixed;
+  }
+
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px 22px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    background: color-mix(in srgb, var(--prism-bg) 72%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--prism-accent) 22%, transparent);
+  }
+  .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .02em;
+    background: linear-gradient(90deg, var(--prism-accent), var(--prism-accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    margin-right: 6px;
+  }
+  .brand-sub {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    opacity: .5;
+    margin-left: 6px;
+  }
+  .spacer { flex: 1; }
+  .modes { display: flex; gap: 6px; }
+  .mode-btn {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--prism-dim);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .mode-btn:hover { color: var(--prism-title); }
+  .mode-btn.active {
+    color: #fff;
+    background: linear-gradient(120deg, var(--prism-accent), var(--prism-accent-2));
+    box-shadow: 0 4px 18px color-mix(in srgb, var(--prism-accent) 45%, transparent);
+  }
+  .mode-btn:not(.active) { border-color: color-mix(in srgb, var(--prism-accent) 22%, transparent); }
+  .tool-btn {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--prism-title);
+    background: color-mix(in srgb, var(--prism-accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--prism-accent) 34%, transparent);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .tool-btn:hover {
+    background: color-mix(in srgb, var(--prism-accent) 26%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--prism-accent) 18%, transparent);
+  }
+  .tool-btn:active { transform: translateY(1px); }
+  .hint {
+    font-size: 12px;
+    color: var(--prism-dim);
+    font-style: italic;
+  }
+
+  /* ---------- dashboard ---------- */
+  .prism {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .prism-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    padding: 26px 30px;
+    color: #fff;
+    background: linear-gradient(120deg, var(--prism-accent), var(--prism-accent-2) 48%, var(--prism-accent-3));
+    box-shadow: 0 14px 44px color-mix(in srgb, var(--prism-accent) 40%, transparent);
+  }
+  .prism[data-mode="morning"] .prism-hero {
+    background: linear-gradient(120deg, #5eead4, var(--prism-accent-2) 55%, var(--prism-accent));
+  }
+  .prism[data-mode="evening"] .prism-hero {
+    background: linear-gradient(120deg, var(--prism-accent), var(--prism-accent-2) 46%, #ff8fb1);
+  }
+  .prism[data-mode="night"] .prism-hero {
+    background: linear-gradient(120deg, #23234d, #4b3f9e 62%, var(--prism-accent));
+  }
+  .prism-hero::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.3) 50%, transparent 68%);
+    transform: translateX(-110%);
+    animation: sweep 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes sweep {
+    0%, 58% { transform: translateX(-110%); }
+    88%, 100% { transform: translateX(110%); }
+  }
+  .prism-hero-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .prism-clock { font-size: 34px; font-weight: 700; letter-spacing: .02em; text-shadow: 0 2px 12px rgba(0,0,0,.25); }
+  .prism-date { font-size: 14px; font-weight: 500; opacity: .85; }
+  .prism-mode-label { margin-top: 10px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em; opacity: .92; }
+  .prism-mode-sub { margin-top: 5px; font-size: 13px; opacity: .85; }
+  .prism-chip {
+    display: inline-block; margin-left: 8px; padding: 2px 10px;
+    border-radius: 999px; background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.35); font-size: 12px; font-weight: 600;
+  }
+
+  .prism-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+  .prism-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    padding: 18px 20px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .45s ease, transform .45s ease, box-shadow .3s ease, border-color .3s ease, background .3s ease;
+  }
+  html.theme-dark .prism-card {
+    background: rgba(20, 26, 42, .55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(124, 108, 255, .18);
+    box-shadow: 0 8px 32px rgba(0,0,0,.35), inset 0 0 0 1px rgba(124,108,255,.04);
+  }
+  html.theme-light .prism-card {
+    background: rgba(255, 255, 255, .62);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(124, 108, 255, .25);
+    box-shadow: 0 6px 24px rgba(90, 76, 180, .1);
+  }
+  .prism.is-visible .prism-card { opacity: 1; transform: translateY(0); }
+  .prism-card:hover {
+    transform: translateY(-2px);
+  }
+  html.theme-dark .prism-card:hover { background: rgba(30, 38, 62, .7); box-shadow: 0 14px 44px rgba(124,108,255,.22), 0 8px 32px rgba(0,0,0,.35); }
+  html.theme-light .prism-card:hover { background: rgba(255,255,255,.85); box-shadow: 0 12px 32px rgba(90,76,180,.16); }
+  .prism-card.is-top {
+    border-color: rgba(124, 108, 255, .45);
+    box-shadow: 0 0 0 1px rgba(124, 108, 255, .30), 0 14px 44px rgba(124, 108, 255, .22);
+  }
+  .prism-card::before {
+    content: "";
+    position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(130deg, transparent 22%, var(--prism-accent) 46%, var(--prism-accent-3) 54%, transparent 78%);
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity .4s ease; pointer-events: none;
+  }
+  .prism-card:hover::before { opacity: 1; animation: shimmer 2.6s linear infinite; }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+  .prism-card.is-pulse { animation: pulse 1.5s ease 2; }
+  @keyframes pulse {
+    0%, 100% { border-color: rgba(124,108,255,.18); }
+    40% { border-color: var(--prism-accent); box-shadow: 0 0 0 4px rgba(124,108,255,.25), 0 14px 46px rgba(124,108,255,.32); }
+  }
+  .prism-card-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+  .prism-card-title {
+    font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .13em;
+    background: linear-gradient(90deg, var(--prism-accent), var(--prism-accent-2));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .prism-card-sub { font-size: 12px; color: var(--prism-dim); }
+  .prism-item { display: flex; flex-direction: column; gap: 1px; padding: 8px 11px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; transition: background .18s ease; }
+  .prism-item:hover { background: rgba(124, 108, 255, .12); }
+  .prism-item-text { font-size: 14px; line-height: 1.35; color: var(--prism-title); }
+  .prism-item-sub { font-size: 11.5px; color: var(--prism-dim); }
+  .prism-item--overdue .prism-item-text { color: var(--prism-danger); }
+  .prism-empty { font-size: 13px; font-style: italic; color: var(--prism-dim); padding: 6px 2px; }
+  .prism-project-title {
+    font-size: 21px; font-weight: 700; margin-bottom: 10px;
+    background: linear-gradient(90deg, var(--prism-accent), var(--prism-accent-3));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .prism-capture-input {
+    width: 100%;
+    font: inherit; font-size: 14px;
+    background: color-mix(in srgb, var(--prism-accent) 7%, transparent);
+    border: 1px solid rgba(124,108,255,.18);
+    border-radius: 12px; padding: 10px 13px; color: var(--prism-title); outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .prism-capture-input::placeholder { color: var(--prism-dim); }
+  .prism-capture-input:focus { border-color: var(--prism-accent); box-shadow: 0 0 0 3px rgba(124,108,255,.22); }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--prism-bg-soft); border: 1px solid rgba(124,108,255,.35);
+    color: var(--prism-title); font-size: 13px; font-weight: 600;
+    padding: 10px 18px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none; transition: all .3s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="brand">Prism<span class="brand-sub">prototype</span></span>
+    <span class="hint">simulated vault · 08:24 · "Atlas" is your active project</span>
+    <div class="spacer"></div>
+    <div class="modes" id="modes">
+      <button class="mode-btn" data-mode="morning">Morning</button>
+      <button class="mode-btn" data-mode="day">Day</button>
+      <button class="mode-btn" data-mode="evening">Evening</button>
+      <button class="mode-btn" data-mode="night">Night</button>
+    </div>
+    <button class="tool-btn" id="themeBtn">☾ Dark</button>
+    <button class="tool-btn" id="overdueBtn">✦ Make a task overdue</button>
+  </div>
+  <div id="stage"></div>
+  <div class="toast" id="toast"></div>
+
+<script>
+  const HOUR = 3600000;
+  const DAY = 86400000;
+  let NOW = Date.now();
+  let mode = "morning";
+  let lastTopId = null;
+  let clickedOverdue = false;
+
+  const tasks = [
+    { text: "Finalize Atlas proposal", path: "Atlas/proposal.md", due: NOW + 20 * HOUR },
+    { text: "Ship signup flow fix", path: "Atlas/auth.md", due: NOW + 9 * HOUR },
+    { text: "Review Q3 marketing notes", path: "Notes/Q3 marketing.md", due: NOW + 50 * HOUR },
+    { text: "Draft agenda for Monday sync", path: "Atlas/agenda.md", due: null },
+    { text: "Update pricing page copy", path: "Atlas/pricing.md", due: null },
+    { text: "Read ch. 3 of Design of Everyday Things", path: "Books/Design of Everyday Things.md", due: null },
+    { text: "Follow up on vendor quote", path: "Inbox.md", due: null },
+  ];
+  const touched = [
+    { title: "Atlas / proposal", path: "Atlas/proposal.md", mtime: NOW - 2 * HOUR },
+    { title: "Atlas / market map", path: "Atlas/market map.md", mtime: NOW - 3 * HOUR },
+    { title: "Notes / Q3 marketing", path: "Notes/Q3 marketing.md", mtime: NOW - 5 * HOUR },
+    { title: "Atlas / auth", path: "Atlas/auth.md", mtime: NOW - 6 * HOUR },
+    { title: "Inbox", path: "Inbox.md", mtime: NOW - 8 * HOUR },
+  ];
+  const stale = [
+    { title: "Zettel · on forgetting", path: "Zettel/on forgetting.md", days: 41 },
+    { title: "Idea · local-first SaaS", path: "Ideas/local-first SaaS.md", days: 23 },
+    { title: "Reading notes · Atomic Habits", path: "Books/Atomic Habits.md", days: 18 },
+    { title: "Meeting notes · sprint 14", path: "Meetings/sprint 14.md", days: 12 },
+  ];
+
+  function rel(t) {
+    const s = Math.max(1, Math.round((NOW - t) / 1000));
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.floor(s / 60) + "m ago";
+    if (s < 86400) return Math.floor(s / 3600) + "h ago";
+    return Math.floor(s / 86400) + "d ago";
+  }
+  function when(t) {
+    const startToday = new Date(NOW); startToday.setHours(0,0,0,0);
+    if (t >= startToday.getTime() && t < startToday.getTime() + DAY) return "today";
+    if (t >= startToday.getTime() + DAY && t < startToday.getTime() + 2*DAY) return "tomorrow";
+    return new Date(t).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  }
+
+  function buildData() {
+    const overdue = tasks
+      .filter(t => !t.done && t.due && t.due < NOW)
+      .map(t => ({ text: t.text, path: t.path, hoursOverdue: (NOW - t.due) / HOUR }));
+    const openLoops = tasks
+      .filter(t => !t.done && !(t.due && t.due < NOW))
+      .map(t => ({ text: t.text, path: t.path }));
+    const deadlines = tasks
+      .filter(t => t.due)
+      .map(t => ({ title: t.text, path: t.path, when: t.due, hoursUntil: (t.due - NOW) / HOUR }))
+      .sort((a, b) => a.when - b.when);
+    return { overdue, openLoops, deadlines, touched, stale, recent: [...touched], project: "Atlas" };
+  }
+
+  const empty = (el, msg) => { el.innerHTML = `<div class="prism-empty">${msg}</div>`; };
+  const item = (el, text, sub, onClick) => {
+    const d = document.createElement("div");
+    d.className = "prism-item";
+    if (onClick) d.onclick = () => { showToast("opened " + text); };
+    d.innerHTML = `<div class="prism-item-text">${text}</div>` + (sub ? `<div class="prism-item-sub">${sub}</div>` : "");
+    el.appendChild(d);
+    return d;
+  };
+
+  const WIDGETS = {
+    "open-loops": {
+      title: "Open loops", subtitle: "Tasks not yet closed", modes: ["morning", "day", "night"],
+      priority(d) { if (d.overdue.length) return 1000 + Math.round(Math.max(...d.overdue.map(o => o.hoursOverdue)) * 10); return d.openLoops.length ? 600 : 0; },
+      render(el, d) {
+        const ov = d.overdue.slice(0, 4), lp = d.openLoops.slice(0, 8);
+        if (!ov.length && !lp.length) return empty(el, "No open loops. Breathe.");
+        ov.forEach(o => item(el, o.text, Math.round(o.hoursOverdue) + "h overdue").classList.add("prism-item--overdue"));
+        lp.forEach(t => item(el, t.text));
+      },
+    },
+    deadlines: {
+      title: "Deadlines", subtitle: "Approaching due dates", modes: ["morning", "day", "evening"],
+      priority(d) { const soon = d.deadlines.filter(x => x.hoursUntil > 0); if (!soon.length) return 0; const n = Math.min(...soon.map(x => x.hoursUntil)); return n <= 72 ? Math.max(1, 500 + Math.round((72 - n) * 2)) : 150; },
+      render(el, d) {
+        if (!d.deadlines.length) return empty(el, "Nothing on the horizon.");
+        d.deadlines.slice(0, 6).forEach(x => item(el, x.title, when(x.when) + (x.hoursUntil <= 0 ? " · past" : "")));
+      },
+    },
+    "focus-project": {
+      title: "Today's focus", subtitle: "Active project", modes: ["morning", "day"],
+      priority() { return 200; },
+      render(el, d) {
+        el.innerHTML = `<div class="prism-project-title">${d.project}</div>`;
+        d.recent.slice(0, 5).forEach(n => item(el, n.title, rel(n.mtime)));
+      },
+    },
+    "quick-capture": {
+      title: "Quick capture", subtitle: "Press enter to save", modes: ["morning", "day", "evening", "night"],
+      priority() { return 100; },
+      render(el) {
+        const input = document.createElement("input");
+        input.className = "prism-capture-input";
+        input.placeholder = "Capture a thought…";
+        input.onkeydown = e => {
+          if (e.key === "Enter" && input.value.trim()) { tasks.push({ text: input.value.trim(), path: "Inbox.md", due: null }); showToast("captured → Inbox.md"); input.value = ""; render(); }
+        };
+        el.appendChild(input);
+      },
+    },
+    "work-queue": {
+      title: "Work queue", subtitle: "Open tasks by freshness", modes: ["day", "night"],
+      priority(d) { return d.openLoops.length ? 500 : 0; },
+      render(el, d) { if (!d.openLoops.length) return empty(el, "Queue is clear."); d.openLoops.slice(0, 8).forEach(t => item(el, t.text)); },
+    },
+    "touched-today": {
+      title: "Touched today", subtitle: "Notes you moved", modes: ["evening", "night"],
+      priority(d) { return d.touched.length ? 400 : 0; },
+      render(el, d) { if (!d.touched.length) return empty(el, "Nothing touched yet."); d.touched.slice(0, 8).forEach(n => item(el, n.title, rel(n.mtime))); },
+    },
+    "stale-notes": {
+      title: "Notes to revisit", subtitle: "Gathering dust, still connected", modes: ["evening", "night"],
+      priority(d) { const top = d.stale[0]; return top ? 300 + top.days * 3 : 0; },
+      render(el, d) { if (!d.stale.length) return empty(el, "Nothing stale."); d.stale.slice(0, 6).forEach(n => item(el, n.title, n.days + "d untouched")); },
+    },
+    "tomorrow-prep": {
+      title: "Tomorrow's prep", subtitle: "What lands next", modes: ["evening", "night"],
+      priority(d) { const st = new Date(NOW); st.setHours(24,0,0,0); const s = st.getTime(); return d.deadlines.some(x => x.when >= s && x.when < s + DAY) ? 250 : 0; },
+      render(el, d) {
+        const st = new Date(NOW); st.setHours(24,0,0,0); const s = st.getTime();
+        const tom = d.deadlines.filter(x => x.when >= s && x.when < s + DAY).slice(0, 4);
+        if (!tom.length && !d.openLoops.length) return empty(el, "Tomorrow looks clear.");
+        tom.forEach(x => item(el, x.title, when(x.when) + " · " + Math.max(1, Math.round(x.hoursUntil)) + "h away"));
+        if (d.openLoops.length) item(el, d.openLoops.length + " open loops carried over", "keep them close");
+      },
+    },
+  };
+
+  const MODE_LABEL = { morning: ["Morning briefing", "Open loops, deadlines, and where to start."], day: ["Working mode", "The queue and what's moving."], evening: ["Evening review", "What you touched, what to revisit."], night: ["Night desk", "Quiet desk — the queue and capture."] };
+  const MODE_TIME = { morning: "08:24", day: "13:12", evening: "19:36", night: "23:10" };
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._h);
+    showToast._h = setTimeout(() => t.classList.remove("show"), 1600);
+  }
+
+  function render() {
+    const stage = document.getElementById("stage");
+    const ctx = { mode, now: NOW, data: buildData() };
+    stage.innerHTML = "";
+    const root = document.createElement("div");
+    root.className = "prism";
+    root.dataset.mode = mode;
+
+    const [label, sub] = MODE_LABEL[mode];
+    document.querySelector(".hint").textContent = `simulated vault · ${MODE_TIME[mode]} · "Atlas" is your active project`;
+    const hero = document.createElement("div");
+    hero.className = "prism-hero";
+    hero.innerHTML = `<div class="prism-hero-row"><div class="prism-clock">${MODE_TIME[mode]}</div><div class="prism-date">${new Date(NOW).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}</div></div><div class="prism-mode-label">${label}</div><div class="prism-mode-sub">${sub}<span class="prism-chip">${ctx.data.project}</span></div>`;
+    root.appendChild(hero);
+
+    const grid = document.createElement("div");
+    grid.className = "prism-grid";
+    const ranked = Object.values(WIDGETS)
+      .filter(w => w.modes.includes(mode))
+      .sort((a, b) => b.priority(ctx.data) - a.priority(ctx.data));
+    let topId = null;
+    ranked.forEach((w, i) => {
+      const card = document.createElement("div");
+      card.className = "prism-card";
+      card.style.transitionDelay = i * 60 + "ms";
+      const head = document.createElement("div");
+      head.className = "prism-card-head";
+      head.innerHTML = `<div class="prism-card-title">${w.title}</div>` + (w.subtitle ? `<div class="prism-card-sub">${w.subtitle}</div>` : "");
+      card.appendChild(head);
+      const body = document.createElement("div");
+      w.render(body, ctx.data);
+      card.appendChild(body);
+      if (i === 0) { card.classList.add("is-top"); topId = w.id; if (lastTopId !== null && lastTopId !== w.id) card.classList.add("is-pulse"); }
+      grid.appendChild(card);
+    });
+    lastTopId = topId;
+    root.appendChild(grid);
+    stage.appendChild(root);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("is-visible")));
+  }
+
+  document.getElementById("modes").addEventListener("click", e => {
+    const btn = e.target.closest(".mode-btn");
+    if (!btn) return;
+    mode = btn.dataset.mode;
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b === btn));
+    render();
+  });
+
+  document.getElementById("themeBtn").addEventListener("click", e => {
+    const light = document.documentElement.classList.toggle("theme-light");
+    e.target.textContent = light ? "☀︎ Light" : "☾ Dark";
+  });
+
+  document.getElementById("overdueBtn").addEventListener("click", () => {
+    if (clickedOverdue) return showToast("already overdue — check 'Open loops'");
+    clickedOverdue = true;
+    const target = tasks.find(t => t.due === null) || tasks[0];
+    target.due = NOW - 2 * HOUR;
+    showToast('"'+ target.text + '" is now overdue — watch it jump to the top');
+    if (!["morning", "day", "night"].includes(mode)) { mode = "morning"; document.querySelector('.mode-btn[data-mode="morning"]').classList.add("active"); document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === "morning")); }
+    render();
+  });
+
+  // init
+  document.querySelector('.mode-btn[data-mode="morning"]').classList.add("active");
+  render();
+</script>
+</body>
+</html>

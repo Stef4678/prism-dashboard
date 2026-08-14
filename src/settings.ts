@@ -1,0 +1,114 @@
+import { App, PluginSettingTab, Setting } from "obsidian";
+import type PrismPlugin from "../main";
+import { MODES, PluginSettings } from "./types";
+import { WIDGET_LABELS } from "./widgets";
+
+export const DEFAULT_SETTINGS: PluginSettings = {
+  accentColor: "#7c6cff",
+  modeHours: {
+    morning: [5, 11],
+    day: [11, 17],
+    evening: [17, 21],
+    night: [21, 5],
+  },
+  enabledWidgets: {
+    "open-loops": true,
+    deadlines: true,
+    "focus-project": true,
+    "quick-capture": true,
+    "work-queue": true,
+    "touched-today": true,
+    "stale-notes": true,
+    "tomorrow-prep": true,
+  },
+  projectBy: "folder",
+  modeOverride: null,
+};
+
+export class PrismSettingTab extends PluginSettingTab {
+  plugin: PrismPlugin;
+
+  constructor(app: App, plugin: PrismPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    containerEl.createEl("h2", { text: "Prism" });
+    containerEl.createEl("p", {
+      cls: "setting-item-description",
+      text: "A context-adaptive dashboard that refracts to your day.",
+    });
+
+    new Setting(containerEl)
+      .setName("Accent color")
+      .setDesc("Drives the gradient and glow across the dashboard.")
+      .addColorPicker((cp) =>
+        cp.setValue(this.plugin.settings.accentColor).onChange(async (value) => {
+          this.plugin.settings.accentColor = value;
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName("Active project by")
+      .setDesc("How Prism decides the current project from your most recent file.")
+      .addDropdown((dd) =>
+        dd
+          .addOption("folder", "Folder")
+          .addOption("tag", "Tag")
+          .setValue(this.plugin.settings.projectBy)
+          .onChange(async (value) => {
+            this.plugin.settings.projectBy = value as "folder" | "tag";
+            await this.plugin.saveSettings();
+          })
+      );
+
+    containerEl.createEl("h3", { text: "Mode hours" });
+    for (const mode of MODES) {
+      const [start, end] = this.plugin.settings.modeHours[mode];
+      const row = new Setting(containerEl)
+        .setName(mode)
+        .setDesc("24h start and end hour for this mode.");
+      row.addText((t) =>
+        t
+          .setPlaceholder("start")
+          .setValue(String(start))
+          .onChange(async (v) => {
+            const n = parseInt(v, 10);
+            if (!Number.isNaN(n)) {
+              this.plugin.settings.modeHours[mode][0] = n;
+              await this.plugin.saveSettings();
+            }
+          })
+      );
+      row.addText((t) =>
+        t
+          .setPlaceholder("end")
+          .setValue(String(end))
+          .onChange(async (v) => {
+            const n = parseInt(v, 10);
+            if (!Number.isNaN(n)) {
+              this.plugin.settings.modeHours[mode][1] = n;
+              await this.plugin.saveSettings();
+            }
+          })
+      );
+    }
+
+    containerEl.createEl("h3", { text: "Widgets" });
+    for (const [id, enabled] of Object.entries(this.plugin.settings.enabledWidgets)) {
+      new Setting(containerEl)
+        .setName(WIDGET_LABELS[id] ?? id)
+        .addToggle((t) =>
+          t.setValue(enabled).onChange(async (v) => {
+            this.plugin.settings.enabledWidgets[id] = v;
+            await this.plugin.saveSettings();
+          })
+        );
+    }
+  }
+}

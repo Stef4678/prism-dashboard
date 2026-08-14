@@ -1,0 +1,15 @@
+{
+  "name": "prism-obsidian",
+  "version": "1.0.0",
+  "description": "A context-adaptive Obsidian dashboard that reconfigures itself by time of day, active project, and live priority.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.12",
+    "obsidian": "^1.5.0",
+    "typescript": "^5.3.3"
+  }
+}
