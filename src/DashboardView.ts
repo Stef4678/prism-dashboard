@@ -152,7 +152,7 @@ export class DashboardView extends ItemView {
     const sub = hero.createDiv({ cls: "prism-mode-sub", text: MODE_SUBTITLES[ctx.mode] });
     if (ctx.project) {
       sub.appendText("  ");
-      sub.createEl("span", { cls: "prism-project-chip", text: ctx.project.title });
+      sub.createSpan({ cls: "prism-project-chip", text: ctx.project.title });
     }
 
     const grid = root.createDiv({ cls: "prism-grid" });
