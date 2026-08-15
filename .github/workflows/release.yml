@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload assets to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --title "Prism Dashboard $GITHUB_REF_NAME"
+          fi
+          gh release upload "$GITHUB_REF_NAME" main.js manifest.json styles.css --clobber
+
+      - name: Attest build provenance (main.js)
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: main.js
+
+      - name: Attest build provenance (manifest.json)
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: manifest.json
+
+      - name: Attest build provenance (styles.css)
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: styles.css
