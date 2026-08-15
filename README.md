@@ -12,6 +12,7 @@ The dashboard reads your vault and reshapes itself across four modes — **Morni
 - **Adaptive by project** — "Today's focus" derives the active project from the folder of your most recently opened note.
 - **Live priority ranking** — widgets re-rank by urgency (overdue tasks jump to the top), so the most important thing is always at the top of the grid.
 - **Quick capture** — type a thought, press Enter, and it's appended to `Capture.md` at your vault root.
+- **Manual refresh** — a toolbar button forces a fresh read of the vault, next to a "last updated" timestamp.
 - **Aurora styling** — glass cards, gradient hero, and per-mode color themes, matching light and dark Obsidian themes.
 
 ## Screenshots

@@ -16,6 +16,7 @@ export class DashboardView extends ItemView {
   private refreshTimer: number | null = null;
   private tickTimer: number | null = null;
   private lastTopId: string | null = null;
+  private lastUpdatedAt: number | null = null;
 
   constructor(leaf: WorkspaceLeaf, private plugin: PrismPlugin) {
     super(leaf);
@@ -94,8 +95,18 @@ export class DashboardView extends ItemView {
     };
   }
 
+  private updatedLabel(): string {
+    if (this.lastUpdatedAt === null) return "Updated —";
+    const t = new Date(this.lastUpdatedAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `Updated ${t}`;
+  }
+
   private async refresh(): Promise<void> {
     const ctx = await this.buildContext();
+    this.lastUpdatedAt = ctx.now;
     this.render(ctx);
   }
 
@@ -133,6 +144,24 @@ export class DashboardView extends ItemView {
         void this.plugin.saveSettings().then(() => this.refresh());
       });
     }
+
+    toolbar.createDiv({ cls: "prism-toolbar-divider" });
+    toolbar.createDiv({ cls: "prism-updated", text: this.updatedLabel() });
+    const refreshBtn = toolbar.createEl("button", {
+      cls: "prism-refresh-btn",
+      attr: { "aria-label": "Refresh dashboard", title: "Refresh dashboard" },
+    });
+    setIcon(refreshBtn, "refresh-cw");
+    const spin = (): void => {
+      refreshBtn.classList.remove("is-spinning");
+      void refreshBtn.offsetWidth; // restart the CSS animation
+      refreshBtn.classList.add("is-spinning");
+      window.setTimeout(() => refreshBtn.classList.remove("is-spinning"), 700);
+    };
+    refreshBtn.onClickEvent(() => {
+      spin();
+      void this.refresh();
+    });
 
     const hero = root.createDiv({ cls: "prism-hero" });
     const clockRow = hero.createDiv({ cls: "prism-hero-row" });

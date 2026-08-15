@@ -1,6 +1,6 @@
 {
   "name": "prism-obsidian",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A context-adaptive Obsidian dashboard that reconfigures itself by time of day, active project, and live priority.",
   "main": "main.js",
   "scripts": {

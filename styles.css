@@ -136,6 +136,58 @@
   opacity: 0.9;
 }
 
+.prism-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--prism-border);
+  margin: 0 2px;
+}
+
+.prism-updated {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--prism-dim);
+  white-space: nowrap;
+}
+
+.prism-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--prism-dim);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--prism-accent) 22%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prism-refresh-btn:hover {
+  color: var(--prism-title);
+  border-color: color-mix(in srgb, var(--prism-accent) 45%, transparent);
+}
+
+.prism-refresh-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.prism-refresh-btn.is-spinning svg {
+  animation: prism-spin 0.6s ease;
+}
+
+@keyframes prism-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ---- hero ---- */
 .prism-hero {
   position: relative;
