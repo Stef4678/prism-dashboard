@@ -15,15 +15,24 @@ export const focusProject: Widget = {
       return;
     }
     el.createDiv({ cls: "prism-project-title", text: ctx.project.title });
-    const prefix = ctx.project.id + "/";
-    const inProject = ctx.data.recent
-      .filter((r) => r.path.startsWith(prefix))
-      .slice(0, 5);
+    const project = ctx.project;
+    const inProject = ctx.data.recent.filter((r) => {
+      if (project.kind === "folder") {
+        return r.path.startsWith(project.id + "/");
+      }
+      const tags = ctx.data.tagsByPath.get(r.path) ?? [];
+      const fm = ctx.data.projectsByPath.get(r.path) ?? null;
+      const want = project.id.toLowerCase();
+      return (
+        (fm !== null && fm.toLowerCase() === want) ||
+        tags.some((t) => t.toLowerCase() === want)
+      );
+    });
     if (!inProject.length) {
-      emptyState(el, "Nothing in this folder recently.");
+      emptyState(el, "Nothing in this project recently.");
       return;
     }
-    for (const n of inProject) {
+    for (const n of inProject.slice(0, 5)) {
       listItem(el, n.title, relative(n.mtime), () => ctx.openFile(n.path));
     }
   },

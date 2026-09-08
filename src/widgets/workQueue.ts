@@ -1,5 +1,5 @@
 import { Widget } from "../types";
-import { emptyState, listItem } from "./Widget";
+import { emptyState, taskItem } from "./Widget";
 
 export const workQueue: Widget = {
   id: "work-queue",
@@ -16,7 +16,7 @@ export const workQueue: Widget = {
       return;
     }
     for (const t of list) {
-      listItem(el, t.text, undefined, () => ctx.openFile(t.path));
+      taskItem(el, { text: t.text, path: t.path, line: t.line }, ctx);
     }
   },
 };

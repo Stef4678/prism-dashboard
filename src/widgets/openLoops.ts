@@ -1,5 +1,5 @@
 import { Widget } from "../types";
-import { emptyState, listItem } from "./Widget";
+import { emptyState, taskItem } from "./Widget";
 
 export const openLoops: Widget = {
   id: "open-loops",
@@ -22,12 +22,20 @@ export const openLoops: Widget = {
       return;
     }
     for (const o of overdue) {
-      listItem(el, o.text, `${Math.round(o.hoursOverdue)}h overdue`, () =>
-        ctx.openFile(o.path)
-      ).classList.add("prism-item--overdue");
+      taskItem(
+        el,
+        {
+          text: o.text,
+          sub: `${Math.round(o.hoursOverdue)}h overdue`,
+          path: o.path,
+          line: o.line,
+          overdue: true,
+        },
+        ctx
+      );
     }
     for (const t of loops) {
-      listItem(el, t.text, undefined, () => ctx.openFile(t.path));
+      taskItem(el, { text: t.text, path: t.path, line: t.line }, ctx);
     }
   },
 };

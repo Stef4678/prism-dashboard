@@ -30,7 +30,10 @@ export function modeLabel(mode: Mode): string {
 
 export function deriveProject(
   activity: Map<string, ActivityRecord>,
-  vault: Vault
+  vault: Vault,
+  by: "folder" | "tag",
+  tagsByPath?: Map<string, string[]>,
+  projectsByPath?: Map<string, string | null>
 ): Project | null {
   let best: string | null = null;
   let bestTime = -1;
@@ -42,7 +45,17 @@ export function deriveProject(
   }
   if (!best) return null;
   const file = vault.getAbstractFileByPath(best);
-  if (file instanceof TFile && file.parent && file.parent.path !== "/") {
+  if (!(file instanceof TFile)) return null;
+
+  if (by === "tag") {
+    const fmProject = projectsByPath?.get(file.path) ?? null;
+    const firstTag = tagsByPath?.get(file.path)?.[0] ?? null;
+    const key = fmProject ?? firstTag;
+    if (!key) return null;
+    return { kind: "tag", id: key, title: key };
+  }
+
+  if (file.parent && file.parent.path !== "/") {
     return { kind: "folder", id: file.parent.path, title: file.parent.name };
   }
   return null;

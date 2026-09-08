@@ -425,3 +425,63 @@
   border-color: var(--prism-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--prism-accent) 22%, transparent);
 }
+
+/* ---- inline task completion ---- */
+.prism-task {
+  cursor: pointer;
+}
+
+.prism-task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.prism-task-check {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  padding: 0;
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--prism-accent) 45%, transparent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.prism-task-check:hover {
+  border-color: var(--prism-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--prism-accent) 18%, transparent);
+}
+
+.prism-task-check.is-pending {
+  border-color: var(--prism-accent);
+  background: color-mix(in srgb, var(--prism-accent) 30%, transparent);
+  animation: prismTaskPulse 0.5s ease infinite alternate;
+}
+
+.prism-task-check[disabled] {
+  cursor: default;
+}
+
+@keyframes prismTaskPulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+.prism-task-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.prism-task-content .prism-item-text {
+  word-break: break-word;
+}

@@ -20,16 +20,20 @@ export interface ParsedTask {
   done: boolean;
   path: string;
   due: number | null;
+  /** 0-based line index of the checkbox in its file. */
+  line: number;
 }
 
 export interface OpenTask {
   text: string;
   path: string;
+  line: number;
 }
 
 export interface OverdueTask {
   text: string;
   path: string;
+  line: number;
   hoursOverdue: number;
 }
 
@@ -38,6 +42,8 @@ export interface UpcomingDeadline {
   path: string;
   when: number;
   hoursUntil: number;
+  /** Set when the deadline is an open task row; null when it is a note-level frontmatter date. */
+  line: number | null;
 }
 
 export interface StaleNote {
@@ -67,6 +73,10 @@ export interface EngineData {
   recent: TouchedNote[];
   mtimeByPath: Map<string, number>;
   links: Map<string, number>;
+  /** Per-file tags (frontmatter + inline), as written in the note. */
+  tagsByPath: Map<string, string[]>;
+  /** Per-file frontmatter `project:` value, or null when absent. */
+  projectsByPath: Map<string, string | null>;
 }
 
 export interface WidgetContext {
@@ -77,6 +87,8 @@ export interface WidgetContext {
   settings: PluginSettings;
   openFile: (path: string) => void;
   capture: (text: string) => Promise<boolean>;
+  /** Completes the task at the given file line in the vault. Resolves false on failure. */
+  toggleTask: (path: string, line: number) => Promise<boolean>;
 }
 
 export interface Widget {

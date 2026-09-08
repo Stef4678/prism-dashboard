@@ -1,5 +1,5 @@
 import { Widget } from "../types";
-import { emptyState, formatWhen, listItem } from "./Widget";
+import { emptyState, formatWhen, listItem, taskItem } from "./Widget";
 
 export const deadlines: Widget = {
   id: "deadlines",
@@ -21,12 +21,21 @@ export const deadlines: Widget = {
     }
     for (const d of list) {
       const past = d.hoursUntil <= 0;
-      listItem(
-        el,
-        d.title,
-        formatWhen(d.when) + (past ? " · past" : ""),
-        () => ctx.openFile(d.path)
-      ).classList.toggle("prism-item--overdue", past);
+      const sub = formatWhen(d.when) + (past ? " · past" : "");
+      if (d.line !== null) {
+        // Task deadline: completable in place.
+        taskItem(
+          el,
+          { text: d.title, sub, path: d.path, line: d.line, overdue: past },
+          ctx
+        );
+      } else {
+        // Note-level frontmatter date: opens the note.
+        listItem(el, d.title, sub, () => ctx.openFile(d.path)).classList.toggle(
+          "prism-item--overdue",
+          past
+        );
+      }
     }
   },
 };

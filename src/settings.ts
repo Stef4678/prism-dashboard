@@ -48,7 +48,7 @@ export class PrismSettingTab extends PluginSettingTab {
           },
           {
             name: "Active project by",
-            desc: "How Prism decides the current project from your most recent file.",
+            desc: "How Prism decides the current project from your most recent file: its folder, or its frontmatter `project:` value (falling back to its first tag).",
             control: {
               type: "dropdown",
               key: "projectBy",
@@ -126,7 +126,9 @@ export class PrismSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Active project by")
-      .setDesc("How Prism decides the current project from your most recent file.")
+      .setDesc(
+        "How Prism decides the current project from your most recent file: its folder, or its frontmatter `project:` value (falling back to its first tag)."
+      )
       .addDropdown((dd) =>
         dd
           .addOption("folder", "Folder")

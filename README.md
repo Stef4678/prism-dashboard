@@ -9,8 +9,9 @@ The dashboard reads your vault and reshapes itself across four modes — **Morni
 ## Features
 
 - **Adaptive by time of day** — modes shift automatically through morning, day, evening, and night, with a toolbar to override anytime.
-- **Adaptive by project** — "Today's focus" derives the active project from the folder of your most recently opened note.
+- **Adaptive by project** — "Today's focus" derives the active project from your most recently opened note: its folder, or its frontmatter `project:` value (falling back to its first tag) when the tag setting is on.
 - **Live priority ranking** — widgets re-rank by urgency (overdue tasks jump to the top), so the most important thing is always at the top of the grid.
+- **Complete tasks in place** — task rows carry a completion ring: click it and Prism checks the task off in the note itself.
 - **Quick capture** — type a thought, press Enter, and it's appended to `Capture.md` at your vault root.
 - **Manual refresh** — a toolbar button forces a fresh read of the vault, next to a "last updated" timestamp.
 - **Aurora styling** — glass cards, gradient hero, and per-mode color themes, matching light and dark Obsidian themes.
@@ -38,11 +39,15 @@ The dashboard reads your vault and reshapes itself across four modes — **Morni
 | Notes to revisit | Notes untouched 7+ days, still linked | evening · night |
 | Tomorrow's prep | What lands tomorrow | evening · night |
 
+> Task rows with a ring (Open loops, Work queue, and task deadlines) can be
+> completed in place — click the ring to check the task off in its note.
+
 ## How the data works
 
 The dashboard reads ordinary Markdown — no separate setup needed.
 
-**Tasks** feed Open loops, Work queue, and Deadlines:
+**Tasks** feed Open loops, Work queue, and Deadlines. Each open task row shows a
+completion ring — click it to mark the task done in its note:
 
 ```markdown
 - [ ] Call the dentist                       <!-- open task -->
@@ -60,7 +65,10 @@ due: 2026-08-17
 - [ ] Draft Monday sync agenda
 ```
 
-**Today's focus** tracks your most recent file-open and uses that file's parent folder as the active project.
+**Today's focus** tracks your most recent file-open. In **Folder** mode the
+active project is that file's parent folder; in **Tag** mode it's the file's
+frontmatter `project:` value, or its first tag when no project is set — and
+"Today's focus" then shows recent notes carrying the same project or tag.
 
 **Notes to revisit** is automatic: notes untouched for 7+ days that still have at least one outgoing `[[link]]`.
 

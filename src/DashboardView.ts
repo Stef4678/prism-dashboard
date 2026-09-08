@@ -69,8 +69,14 @@ export class DashboardView extends ItemView {
     const settings = this.plugin.settings;
     const mode =
       settings.modeOverride ?? classifyMode(new Date(now), settings.modeHours);
-    const project = deriveProject(this.plugin.activity.recent, this.app.vault);
     const data = await this.plugin.dataLayer.buildEngineData(now);
+    const project = deriveProject(
+      this.plugin.activity.recent,
+      this.app.vault,
+      settings.projectBy,
+      data.tagsByPath,
+      data.projectsByPath
+    );
     return {
       mode,
       project,
@@ -87,6 +93,21 @@ export class DashboardView extends ItemView {
         } catch (err) {
           new Notice(
             `Capture failed — ${err instanceof Error ? err.message : String(err)}`,
+            5000
+          );
+          return false;
+        }
+      },
+      toggleTask: async (path, line) => {
+        try {
+          const ok = await this.plugin.dataLayer.toggleTask(path, line, true);
+          if (ok) this.scheduleRefresh(0);
+          return ok;
+        } catch (err) {
+          new Notice(
+            `Couldn't update the task — ${
+              err instanceof Error ? err.message : String(err)
+            }`,
             5000
           );
           return false;

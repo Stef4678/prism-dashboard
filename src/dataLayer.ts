@@ -48,8 +48,9 @@ export class DataLayer {
     const content = await this.vault.cachedRead(file);
     const noteDue = this.getFrontmatterDate(file);
     const tasks: ParsedTask[] = [];
-    for (const line of content.split("\n")) {
-      const m = line.match(TASK_RE);
+    const lines = content.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(TASK_RE);
       if (!m) continue;
       const dueMatch = m[2].match(DUE_RE);
       const due = dueMatch ? Date.parse(dueMatch[1]) : noteDue;
@@ -58,10 +59,37 @@ export class DataLayer {
         done: m[1] !== " ",
         path: file.path,
         due: Number.isNaN(due) ? null : due,
+        line: i,
       });
     }
     this.taskCache.set(file.path, { mtime: file.stat.mtime, tasks });
     return tasks;
+  }
+
+  /**
+   * Completes (or reopens) the task at `line` in `path` by rewriting the
+   * checkbox marker in the vault. Returns false when the file or the line
+   * is not a task, or when the content was already in the target state.
+   */
+  async toggleTask(path: string, line: number, done: boolean): Promise<boolean> {
+    const file = this.vault.getFileByPath(path);
+    if (!(file instanceof TFile)) return false;
+    let changed = false;
+    await this.vault.process(file, (content) => {
+      const lines = content.split("\n");
+      if (line < 0 || line >= lines.length) return content;
+      const m = lines[line].match(TASK_RE);
+      if (!m) return content;
+      const marker = done ? "[x]" : "[ ]";
+      const markerRe = /^(\s*[-*] )\[[ xX]\]/;
+      if (!markerRe.test(lines[line])) return content;
+      lines[line] = lines[line].replace(markerRe, `$1${marker}`);
+      changed = true;
+      return lines.join("\n");
+    });
+    if (!changed) return false;
+    this.invalidate(path);
+    return true;
   }
 
   invalidate(path: string): void {
@@ -78,6 +106,8 @@ export class DataLayer {
     const recent: TouchedNote[] = [];
     const links = new Map<string, number>();
     const mtimeByPath = new Map<string, number>();
+    const tagsByPath = new Map<string, string[]>();
+    const projectsByPath = new Map<string, string | null>();
 
     const dayStart = new Date(now);
     dayStart.setHours(0, 0, 0, 0);
@@ -92,6 +122,36 @@ export class DataLayer {
       const outLinks = this.app.metadataCache.resolvedLinks[file.path];
       links.set(file.path, outLinks ? Object.keys(outLinks).length : 0);
 
+      const fileCache = this.app.metadataCache.getFileCache(file);
+      const rawTags: string[] = [];
+      if (fileCache) {
+        for (const t of fileCache.tags ?? []) rawTags.push(t.tag);
+        const fmTags = fileCache.frontmatter?.["tags"];
+        if (typeof fmTags === "string") rawTags.push(fmTags);
+        else if (Array.isArray(fmTags))
+          for (const v of fmTags) if (typeof v === "string") rawTags.push(v);
+      }
+      const seen = new Set<string>();
+      const uniqTags: string[] = [];
+      for (const raw of rawTags) {
+        const t = raw.trim();
+        if (!t) continue;
+        const key = t.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        uniqTags.push(t);
+      }
+      tagsByPath.set(file.path, uniqTags);
+
+      const fmProjectRaw = fileCache?.frontmatter?.["project"];
+      const fmProject =
+        typeof fmProjectRaw === "string"
+          ? fmProjectRaw.trim()
+          : Array.isArray(fmProjectRaw) && typeof fmProjectRaw[0] === "string"
+            ? fmProjectRaw[0].trim()
+            : null;
+      projectsByPath.set(file.path, fmProject || null);
+
       if (mtime >= dayStartMs) touchedToday.push({ title, path: file.path, mtime });
       recent.push({ title, path: file.path, mtime });
 
@@ -102,6 +162,7 @@ export class DataLayer {
           path: file.path,
           when: fmDate,
           hoursUntil: (fmDate - now) / HOUR_MS,
+          line: null,
         });
       }
 
@@ -114,15 +175,21 @@ export class DataLayer {
       for (const t of tasks) {
         if (t.done) continue;
         if (t.due !== null && t.due < now) {
-          overdue.push({ text: t.text, path: t.path, hoursOverdue: (now - t.due) / HOUR_MS });
+          overdue.push({
+            text: t.text,
+            path: t.path,
+            line: t.line,
+            hoursOverdue: (now - t.due) / HOUR_MS,
+          });
         } else {
-          openLoops.push({ text: t.text, path: t.path });
+          openLoops.push({ text: t.text, path: t.path, line: t.line });
           if (t.due !== null && t.due < now + 72 * HOUR_MS) {
             deadlines.push({
               title: t.text,
               path: t.path,
               when: t.due,
               hoursUntil: (t.due - now) / HOUR_MS,
+              line: t.line,
             });
           }
         }
@@ -157,6 +224,8 @@ export class DataLayer {
       recent: recent.slice(0, 20),
       mtimeByPath,
       links,
+      tagsByPath,
+      projectsByPath,
     };
   }
 }
