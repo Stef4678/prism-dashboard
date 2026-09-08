@@ -126,7 +126,7 @@ export class DataLayer {
       const rawTags: string[] = [];
       if (fileCache) {
         for (const t of fileCache.tags ?? []) rawTags.push(t.tag);
-        const fmTags = fileCache.frontmatter?.["tags"];
+        const fmTags: unknown = fileCache.frontmatter?.["tags"];
         if (typeof fmTags === "string") rawTags.push(fmTags);
         else if (Array.isArray(fmTags))
           for (const v of fmTags) if (typeof v === "string") rawTags.push(v);
@@ -143,7 +143,7 @@ export class DataLayer {
       }
       tagsByPath.set(file.path, uniqTags);
 
-      const fmProjectRaw = fileCache?.frontmatter?.["project"];
+      const fmProjectRaw: unknown = fileCache?.frontmatter?.["project"];
       const fmProject =
         typeof fmProjectRaw === "string"
           ? fmProjectRaw.trim()
