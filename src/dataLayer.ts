@@ -17,6 +17,8 @@ interface TaskCacheEntry {
 const TASK_RE = /^\s*[-*] \[([ xX])\]\s+(.+)$/;
 const DUE_RE = /📅\s*(\d{4}-\d{2}-\d{2})/;
 const DAY_MS = 86400000;
+const HOUR_MS = 3600000;
+const DEADLINE_HORIZON_MS = 72 * HOUR_MS;
 const STALE_AFTER_DAYS = 7;
 
 export class DataLayer {
@@ -27,16 +29,43 @@ export class DataLayer {
     this.vault = app.vault;
   }
 
+  private isDashboardExcluded(file: TFile): boolean {
+    if (file.path.toLowerCase().startsWith("templates/")) return true;
+
+    const status: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.[
+      "status"
+    ];
+    return typeof status === "string" && status.trim().toLowerCase() === "closed";
+  }
+
+  private parseDueDate(raw: unknown): number {
+    if (typeof raw !== "string" && typeof raw !== "number") return NaN;
+
+    const value = String(raw).trim();
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (!dateOnly) return Date.parse(value);
+
+    const year = Number(dateOnly[1]);
+    const month = Number(dateOnly[2]);
+    const day = Number(dateOnly[3]);
+    const local = new Date(year, month - 1, day, 23, 59, 59, 999);
+    if (
+      local.getFullYear() !== year ||
+      local.getMonth() !== month - 1 ||
+      local.getDate() !== day
+    ) {
+      return NaN;
+    }
+    return local.getTime();
+  }
+
   getFrontmatterDate(file: TFile): number | null {
     const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
     if (!fm) return null;
-    for (const key of ["deadline", "due", "due_date", "date"]) {
+    for (const key of ["deadline", "due", "due_date"]) {
       const raw: unknown = fm[key];
       if (raw == null) continue;
-      const t =
-        typeof raw === "string" || typeof raw === "number"
-          ? Date.parse(String(raw))
-          : NaN;
+      const t = this.parseDueDate(raw);
       if (!Number.isNaN(t)) return t;
     }
     return null;
@@ -53,7 +82,7 @@ export class DataLayer {
       const m = lines[i].match(TASK_RE);
       if (!m) continue;
       const dueMatch = m[2].match(DUE_RE);
-      const due = dueMatch ? Date.parse(dueMatch[1]) : noteDue;
+      const due = dueMatch ? this.parseDueDate(dueMatch[1]) : noteDue;
       tasks.push({
         text: m[2].trim(),
         done: m[1] !== " ",
@@ -113,9 +142,10 @@ export class DataLayer {
     dayStart.setHours(0, 0, 0, 0);
     const dayStartMs = dayStart.getTime();
     const staleThreshold = now - STALE_AFTER_DAYS * DAY_MS;
-    const HOUR_MS = 3600000;
 
     for (const file of files) {
+      if (this.isDashboardExcluded(file)) continue;
+
       const mtime = file.stat.mtime;
       const title = file.basename;
       mtimeByPath.set(file.path, mtime);
@@ -156,7 +186,7 @@ export class DataLayer {
       recent.push({ title, path: file.path, mtime });
 
       const fmDate = this.getFrontmatterDate(file);
-      if (fmDate !== null && fmDate < now) {
+      if (fmDate !== null && fmDate < now + DEADLINE_HORIZON_MS) {
         deadlines.push({
           title,
           path: file.path,
@@ -183,7 +213,7 @@ export class DataLayer {
           });
         } else {
           openLoops.push({ text: t.text, path: t.path, line: t.line });
-          if (t.due !== null && t.due < now + 72 * HOUR_MS) {
+          if (t.due !== null && t.due < now + DEADLINE_HORIZON_MS) {
             deadlines.push({
               title: t.text,
               path: t.path,
@@ -205,6 +235,7 @@ export class DataLayer {
     deadlines.sort((a, b) => a.when - b.when);
 
     for (const file of files) {
+      if (this.isDashboardExcluded(file)) continue;
       if (file.stat.mtime < staleThreshold && (links.get(file.path) ?? 0) > 0) {
         staleNotes.push({
           title: file.basename,

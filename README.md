@@ -65,6 +65,14 @@ due: 2026-08-17
 - [ ] Draft Monday sync agenda
 ```
 
+Prism recognizes the frontmatter keys `deadline`, `due`, and `due_date`. A
+note's general `date` metadata is not treated as a deadline. Date-only values
+use the local calendar day and remain due through the end of that day.
+
+Files under `Templates/` and notes whose frontmatter has `status: closed` are
+excluded from dashboard data, including tasks, deadlines, recent notes, and
+project focus.
+
 **Today's focus** tracks your most recent file-open. In **Folder** mode the
 active project is that file's parent folder; in **Tag** mode it's the file's
 frontmatter `project:` value, or its first tag when no project is set — and

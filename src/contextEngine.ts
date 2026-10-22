@@ -38,6 +38,7 @@ export function deriveProject(
   let best: string | null = null;
   let bestTime = -1;
   for (const [path, rec] of activity) {
+    if (tagsByPath && !tagsByPath.has(path)) continue;
     if (rec.lastOpened > bestTime) {
       bestTime = rec.lastOpened;
       best = path;
